@@ -14,11 +14,12 @@ class CoinPriceService(
     fun getCoinPrice(symbol: String): CoinPriceResponseDto {
         // TODO: normalize symbol before retrieving data from tabdeal API
         val normalizedSymbol= symbolNormalizer.normalize(symbol)
+        println(normalizedSymbol)
 
 
 
         val resultExchangeInfo=tabdealClient.getExchangeInfo()
-        val usedSymbol:String=resultExchangeInfo.find { query -> query.quoteAsset == "USDT" && query.baseAsset == normalizedSymbol && query.status == "TRADING"}?.symbol.toString()
+        val usedSymbol:String=resultExchangeInfo.find { query -> query.quoteAsset == "USDT" && query.status == "TRADING" && query.symbol == normalizedSymbol}?.symbol.toString()
         print(usedSymbol)
 
 

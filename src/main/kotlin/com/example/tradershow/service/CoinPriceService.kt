@@ -8,13 +8,18 @@ import org.springframework.web.bind.annotation.GetMapping
 
 @Service
 class CoinPriceService(
-    private val tabdealClient: TabdealClient
+    private val tabdealClient: TabdealClient,
+    private val symbolNormalizer: SymbolNormalizerService
 ) {
     fun getCoinPrice(symbol: String): CoinPriceResponseDto {
         // TODO: normalize symbol before retrieving data from tabdeal API
-        val resultExchangeInfo=tabdealClient.getExchangeInfo()
-        val usedSymbol:String=resultExchangeInfo.find { query -> query.quoteAsset == "USDT" && query.baseAsset == symbol && query.status == "TRADING"}?.symbol?:"BTCUSDT"
+        val normalizedSymbol= symbolNormalizer.normalize(symbol)
 
+
+
+        val resultExchangeInfo=tabdealClient.getExchangeInfo()
+        val usedSymbol:String=resultExchangeInfo.find { query -> query.quoteAsset == "USDT" && query.baseAsset == normalizedSymbol && query.status == "TRADING"}?.symbol.toString()
+        print(usedSymbol)
 
 
 
@@ -23,5 +28,4 @@ class CoinPriceService(
         return result.last().toCoinPriceResponseDto(usedSymbol, "USDT",symbol=usedSymbol)
     }
 
-//    GET https://api1.tabdeal.org/r/api/v1/exchangeInfo [NONE]
 }

@@ -19,7 +19,7 @@ class CoinPriceService(
 
 
         val resultExchangeInfo=tabdealClient.getExchangeInfo()
-        val usedSymbol:String=resultExchangeInfo.find { query -> query.quoteAsset == "USDT" && query.status == "TRADING" && query.symbol == normalizedSymbol}?.symbol.toString()
+        val usedSymbol:String=resultExchangeInfo.find { query -> query.quoteAsset == "USDT" && query.status == "TRADING" && (query.symbol == normalizedSymbol || query.baseAsset == normalizedSymbol)}?.symbol.toString()
         print(usedSymbol)
 
 

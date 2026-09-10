@@ -3,6 +3,7 @@ import com.example.tradershow.dto.ExchangeInfoResponseDto
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import com.example.tradershow.dto.TabdealTradeResponseDto
+import com.example.tradershow.exception.MarketNotFoundException
 import org.springframework.stereotype.Component
 import tools.jackson.databind.ObjectMapper
 import tools.jackson.core.type.TypeReference
@@ -26,10 +27,10 @@ class TabdealClient {
         val response = client.newCall(request).execute()
 
         if (!response.isSuccessful) {
-            throw RuntimeException("Tabdeal request failed")
+            throw MarketNotFoundException("یافت نشد")
         }
 
-        val body = response.body?.string() ?: throw RuntimeException("Tabdeal request failed")
+        val body = response.body?.string() ?: throw MarketNotFoundException("یافت نشد")
         val trades = objectMapper.readValue(
             body,
             object : TypeReference<List<TabdealTradeResponseDto>>() {}
@@ -45,9 +46,11 @@ class TabdealClient {
             .build()
         val response= client.newCall(request).execute()
         if (!response.isSuccessful) {
-            throw RuntimeException("Tabdeal request failed")
+            throw MarketNotFoundException("یافت نشد")
         }
-        val body = response.body?.string() ?: throw RuntimeException("Tabdeal request failed")
+        val body = response.body?.string() ?: throw MarketNotFoundException("یافت نشد")
+        if (body.isEmpty())
+            throw MarketNotFoundException("یافت نشد")
         val exchangeInfo = objectMapper.readValue(
             body,
             object : TypeReference<List<ExchangeInfoResponseDto>>() {}

@@ -6,6 +6,7 @@ import okhttp3.Request
 import com.example.tradershow.dto.TabdealTradeResponseDto
 import com.example.tradershow.exception.MarketNotFoundException
 import com.example.tradershow.exception.TabdealApiException
+import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Component
 import tools.jackson.databind.ObjectMapper
 import tools.jackson.core.type.TypeReference
@@ -41,7 +42,9 @@ class TabdealClient {
         return trades
     }
 
+    @Cacheable("exchangeInfo")
     fun getExchangeInfo(): List<ExchangeInfoResponseDto> {
+        println("🔥 CALLING TABDEAL EXCHANGE INFO")
         val request = Request.Builder()
             .url("https://api1.tabdeal.org/r/api/v1/exchangeInfo/")
             .get()

@@ -27,7 +27,7 @@ class TabdealClient {
             .build()
 
         val response = client.newCall(request).execute()
-        if (response.isSuccessful) {
+        if (!response.isSuccessful) {
             throw TabdealApiException("با خطایی هنگام اتصال مواجه شدیم")
         }
 

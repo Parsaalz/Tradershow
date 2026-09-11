@@ -1,9 +1,11 @@
 package com.example.tradershow.client
+
 import com.example.tradershow.dto.ExchangeInfoResponseDto
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import com.example.tradershow.dto.TabdealTradeResponseDto
 import com.example.tradershow.exception.MarketNotFoundException
+import com.example.tradershow.exception.TabdealApiException
 import org.springframework.stereotype.Component
 import tools.jackson.databind.ObjectMapper
 import tools.jackson.core.type.TypeReference
@@ -25,12 +27,12 @@ class TabdealClient {
             .build()
 
         val response = client.newCall(request).execute()
-
-        if (!response.isSuccessful) {
-            throw MarketNotFoundException("یافت نشد")
+        if (response.isSuccessful) {
+            throw TabdealApiException("با خطایی هنگام اتصال مواجه شدیم")
         }
 
-        val body = response.body?.string() ?: throw MarketNotFoundException("یافت نشد")
+        val body = response.body?.string() ?: throw TabdealApiException("با خطایی هنگام اتصال مواجه شدیم")
+        if (body.isEmpty()) throw TabdealApiException("با خطایی هنگام اتصال مواجه شدیم")
         val trades = objectMapper.readValue(
             body,
             object : TypeReference<List<TabdealTradeResponseDto>>() {}
@@ -38,19 +40,18 @@ class TabdealClient {
 
         return trades
     }
-    fun getExchangeInfo(): List<ExchangeInfoResponseDto>
-    {
+
+    fun getExchangeInfo(): List<ExchangeInfoResponseDto> {
         val request = Request.Builder()
             .url("https://api1.tabdeal.org/r/api/v1/exchangeInfo/")
             .get()
             .build()
-        val response= client.newCall(request).execute()
+        val response = client.newCall(request).execute()
         if (!response.isSuccessful) {
-            throw MarketNotFoundException("یافت نشد")
+            throw TabdealApiException("با خطایی هنگام اتصال مواجه شدیم")
         }
-        val body = response.body?.string() ?: throw MarketNotFoundException("یافت نشد")
-        if (body.isEmpty())
-            throw MarketNotFoundException("یافت نشد")
+        val body = response.body?.string() ?: throw TabdealApiException("با خطایی هنگام اتصال مواجه شدیم")
+        if (body.isEmpty()) throw TabdealApiException("با خطایی هنگام اتصال مواجه شدیم")
         val exchangeInfo = objectMapper.readValue(
             body,
             object : TypeReference<List<ExchangeInfoResponseDto>>() {}

@@ -22,11 +22,28 @@ class GlobalExceptionHandler {
     ):ResponseEntity<ErrorResponseDto>
     {
         val response= ErrorResponseDto(
-            status=404,
+            status=400,
             message=exception.message?:"not found",
             path=request.requestURI,
         )
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response)
     }
+
+    @ExceptionHandler(TabdealApiException::class)
+    fun handleTabdealApiException(
+        exception: TabdealApiException,
+        request: HttpServletRequest,
+    ):ResponseEntity<ErrorResponseDto>
+    {
+        val response= ErrorResponseDto(
+            status=502,
+            message=exception.message?:"bad gateway",
+            path=request.requestURI,
+        )
+
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(response)
+    }
+
+
 
 }

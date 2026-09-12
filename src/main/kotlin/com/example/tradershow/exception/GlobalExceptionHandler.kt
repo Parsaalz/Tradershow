@@ -45,5 +45,33 @@ class GlobalExceptionHandler {
     }
 
 
+    @ExceptionHandler(SideWrongException::class)
+    fun handleSideWrongException(
+        exception: SideWrongException,
+        request: HttpServletRequest,
+    ):ResponseEntity<ErrorResponseDto>
+    {
+        val response= ErrorResponseDto(
+            status=400,
+            message=exception.message?:"Bad Request",
+            path=request.requestURI,
+        )
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(response)
+    }
+
+
+    @ExceptionHandler(QuantityNotTrueException::class)
+    fun handleQuantityNotTrueException(
+        exception: QuantityNotTrueException,
+        request: HttpServletRequest,
+    ):ResponseEntity<ErrorResponseDto>
+    {
+        val response=ErrorResponseDto(
+            status=400,
+            message=exception.message?:"Bad Request",
+            path=request.requestURI,
+        )
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response)
+    }
 
 }

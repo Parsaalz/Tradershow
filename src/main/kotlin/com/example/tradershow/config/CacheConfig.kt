@@ -12,10 +12,19 @@ class CacheConfig() {
 
     @Bean
     fun cacheManager(): CacheManager {
-        val caffeine = Caffeine.newBuilder()
-            .expireAfterWrite(Duration.ofHours(1))
         val cacheManager = CaffeineCacheManager()
-        cacheManager.setCaffeine(caffeine)
+        cacheManager.registerCustomCache(
+            "exchange-info",
+            Caffeine.newBuilder()
+                .expireAfterWrite(Duration.ofHours(1))
+                .build<Any,Any>()
+        )
+        cacheManager.registerCustomCache(
+            "price-info",
+            Caffeine.newBuilder()
+                .expireAfterWrite(Duration.ofSeconds(10))
+            .build<Any,Any>()
+        )
         return cacheManager
 
     }

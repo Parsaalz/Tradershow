@@ -5,10 +5,12 @@ import com.example.tradershow.dto.CoinPriceResponseDto
 import com.example.tradershow.dto.ExchangeInfoResponseDto
 import com.example.tradershow.exception.MarketNotFoundException
 import com.example.tradershow.exception.TabdealApiException
+import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Service
 import org.springframework.web.bind.annotation.GetMapping
 
 @Service
+@Cacheable("price_info")
 class CoinPriceService(
     private val symbolNormalizer: SymbolNormalizerService,
     private val tabdealClient: TabdealClient,

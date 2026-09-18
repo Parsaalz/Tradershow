@@ -1,8 +1,8 @@
-package com.example.tradershow.dto
+package com.example.tradershow.dto.Limit
 
-import java.math.BigDecimal
+import com.example.tradershow.dto.FillDto
 
-data class MarketResponseDto(
+data class TabdealLimitOrderResponseDto(
     val symbol: String,
     val orderId: Long,
     val transactTime: Long,
@@ -13,19 +13,18 @@ data class MarketResponseDto(
     val type: String,
     val side: String,
     val price: String,
-    val fills: List<FillDto>
 )
 {
-    fun toMarketOrderUserResponseDto(quantity : BigDecimal): MarketOrderUserResponseDto {
-        return MarketOrderUserResponseDto(
+    fun toLimitOrderUserResponseDto():LimitOrderUserResponseDto{
+        return LimitOrderUserResponseDto(
             symbol = symbol,
             orderId = orderId,
             side = side,
-            type = type,
-            status = status,
-            quantity = quantity,
-            executedQuantity = executedQty,
             price = price,
+            status = status,
+            type = type,
+            quantity = cummulativeQuoteQty,
+            executedQuantity = executedQty,
             total = cummulativeQuoteQty,
         )
     }

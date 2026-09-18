@@ -1,7 +1,6 @@
-package com.example.tradershow.dto
+package com.example.tradershow.dto.Market
 
-import com.sun.tools.javac.tree.TreeInfo.symbol
-import java.time.LocalDateTime
+import com.example.tradershow.dto.CoinPriceResponseDto
 
 data class TabdealTradeResponseDto(
     val price: String,

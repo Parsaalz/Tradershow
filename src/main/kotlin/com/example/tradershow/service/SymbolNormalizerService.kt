@@ -7,8 +7,8 @@ import org.springframework.stereotype.Service
 class SymbolNormalizerService {
     fun normalize(userSymbol: String): String {
         val normalizedUserSymbol: String = userSymbol.trim().let {
-            var newSymbol: String = ""
-            for (i in 0..<it.length) {
+            var newSymbol = ""
+            for (i in it.indices) {
                 if (it[i] != ('/') && it[i] != ('-') && it[i] != ('_')) {
                     newSymbol += it[i]
                 }
@@ -16,6 +16,5 @@ class SymbolNormalizerService {
             newSymbol.uppercase()
         }
         return normalizedUserSymbol
-
     }
 }

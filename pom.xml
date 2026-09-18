@@ -29,6 +29,7 @@
 	<properties>
 		<java.version>21</java.version>
 		<kotlin.version>2.3.21</kotlin.version>
+		<exposed.version>0.61.0</exposed.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -71,6 +72,32 @@
 			<groupId>com.github.ben-manes.caffeine</groupId>
 			<artifactId>caffeine</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>org.jetbrains.exposed</groupId>
+			<artifactId>exposed-core</artifactId>
+			<version>${exposed.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.jetbrains.exposed</groupId>
+			<artifactId>exposed-jdbc</artifactId>
+			<version>${exposed.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>io.mockk</groupId>
+			<artifactId>mockk-jvm</artifactId>
+			<version>1.13.17</version>
+			<scope>test</scope>
+		</dependency>
+
+
 	</dependencies>
 
 	<build>

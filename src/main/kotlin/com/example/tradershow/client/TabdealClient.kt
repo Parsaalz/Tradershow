@@ -1,5 +1,6 @@
 package com.example.tradershow.client
 
+import com.example.tradershow.dto.Allorders.TabdedalAllOrdersResponseDto
 import com.example.tradershow.dto.Conditional.SubmitConditionalOrderRequestDto
 import com.example.tradershow.dto.Conditional.TabdealConditionalOrderResponseDto
 import com.example.tradershow.dto.ExchangeInfoResponseDto
@@ -13,6 +14,8 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import okio.ByteString.Companion.encodeUtf8
+import okio.HashingSource.Companion.hmacSha256
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Component
 import tools.jackson.core.type.TypeReference
@@ -199,6 +202,40 @@ class TabdealClient {
         return objectMapper.readValue(
             responseBody,
             object : TypeReference<TabdealConditionalOrderResponseDto>() {}
+        )
+    }
+
+    fun getAllOrders(): List<TabdedalAllOrdersResponseDto> {
+
+        val timestamp = System.currentTimeMillis()
+
+        val query:String = "limit=50&timestamp=$timestamp"
+
+        val signature  = generateSignature(query,apiSecret)
+
+        val url =
+            "https://api1.tabdeal.org/r/api/v1/allOrders?$query&signature=$signature"
+
+        val request = Request.Builder()
+            .url(url)
+            .get()
+            .addHeader("X-MBX-APIKEY", apiKey)
+            .build()
+
+        val response = client.newCall(request).execute()
+
+        val responseBody = response.body?.string()
+
+        println("ORDER STATUS: ${response.code}")
+        println("ORDER RESPONSE: $responseBody")
+
+        if (!response.isSuccessful) {
+            throw TabdealApiException("سرویس در دسترس نمیباشد")
+        }
+
+        return objectMapper.readValue(
+            responseBody,
+            object : TypeReference<List<TabdedalAllOrdersResponseDto>>() {}
         )
     }
 }

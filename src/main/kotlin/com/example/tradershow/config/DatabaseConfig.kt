@@ -1,5 +1,6 @@
 package com.example.tradershow.config
 
+import com.example.tradershow.database.table.CoinPrices
 import com.example.tradershow.database.table.OrdersTable
 import jakarta.annotation.PostConstruct
 import org.jetbrains.exposed.sql.Database
@@ -22,6 +23,7 @@ class DatabaseConfig {
         )
         transaction {
             SchemaUtils.create(OrdersTable)
+            SchemaUtils.create(CoinPrices)
         }
     }
 }

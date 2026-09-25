@@ -16,7 +16,6 @@ class CacheConfig() {
         cacheManager.registerCustomCache(
             "exchange-info",
             Caffeine.newBuilder()
-                .expireAfterWrite(Duration.ofHours(1))
                 .build<Any,Any>()
         )
         cacheManager.registerCustomCache(

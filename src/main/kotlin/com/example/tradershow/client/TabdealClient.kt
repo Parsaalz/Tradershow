@@ -80,7 +80,6 @@ class TabdealClient {
         return trades
     }
 
-    @Cacheable("exchangeInfo")
     fun getExchangeInfo(): List<ExchangeInfoResponseDto> {
         println("🔥 CALLING TABDEAL EXCHANGE INFO")
         val request = Request.Builder()

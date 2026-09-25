@@ -2,6 +2,7 @@ package com.example.tradershow.config
 
 import com.example.tradershow.database.table.CoinPrices
 import com.example.tradershow.database.table.OrdersTable
+import com.example.tradershow.database.table.StopLossLimitOrdersTable
 import jakarta.annotation.PostConstruct
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
@@ -24,6 +25,7 @@ class DatabaseConfig {
         transaction {
             SchemaUtils.create(OrdersTable)
             SchemaUtils.create(CoinPrices)
+            SchemaUtils.create(StopLossLimitOrdersTable)
         }
     }
 }

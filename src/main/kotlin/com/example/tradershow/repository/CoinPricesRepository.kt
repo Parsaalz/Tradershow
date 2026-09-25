@@ -6,14 +6,25 @@ import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.upsert
 import org.springframework.stereotype.Repository
+import java.math.BigDecimal
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
+
+fun Long.toTehranTime():String{
+    return Instant
+        .ofEpochMilli(this)
+        .atZone(ZoneId.of("Asia/Tehran"))
+        .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+}
 
 @Repository
 class CoinPricesRepository {
 
     fun save(
         symbol: String,
-        price: Double,
+        price: BigDecimal,
         time: Long,
     ) {
         transaction {
@@ -28,15 +39,15 @@ class CoinPricesRepository {
 
     fun findBySymbol(symbol: String): CoinPriceUserResponseDto? {
         return transaction {
-            CoinPrices.selectAll().where { CoinPrices.symbol eq  symbol }.map {
+            CoinPrices.selectAll().where { CoinPrices.symbol eq symbol }.map {
                 CoinPriceUserResponseDto(
                     it[CoinPrices.symbol],
                     it[CoinPrices.symbol],
                     "USDT",
                     it[CoinPrices.price],
-                    it[CoinPrices.lastUpdatedTime]
+                    it[CoinPrices.lastUpdatedTime].toTehranTime()
                 )
-            }.singleOrNull()
+            }.single()
         }
     }
 }

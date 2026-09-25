@@ -88,10 +88,9 @@ class GetTradesSchedule(
                                 quote = "USDT",
                                 symbol = task,
                             )
-                            println(result)
                             coinRepo.save(
                                 task,
-                                price = result.price.toDouble(),
+                                price = result.price.toBigDecimal(),
                                 time = result.time,
                             )
                         }
@@ -99,7 +98,6 @@ class GetTradesSchedule(
                     Thread.sleep(5_000)
                 }
             executer.shutdown()
-            println("____________________________Finisheddddddddddddddddddddddddddd------------------------")
 
 
         }catch (e: Exception)

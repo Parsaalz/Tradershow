@@ -161,12 +161,15 @@ class TabdealClient {
         println("ORDER STATUS: ${response.code}")
         println("ORDER RESPONSE: $responseBody")
         if (!response.isSuccessful) {
+            response.close()
             throw TabdealApiException("\"بامشکلی روبرو شدیم\"")
         }
+        response.close()
         return objectMapper.readValue(
             responseBody,
             object : TypeReference<TabdealLimitOrderResponseDto>() {}
         )
+
     }
 
 

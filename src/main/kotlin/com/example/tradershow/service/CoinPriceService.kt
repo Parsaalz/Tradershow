@@ -71,8 +71,9 @@ class GetTradesSchedule(
     private val coinRepo: CoinPricesRepository
 )
 {
-    @Scheduled(fixedDelay = 10_000)
+    @Scheduled(fixedDelay = 1_000)
     fun getTrades() {
+        println("start get coins price------------------- ")
         try {
             val executer = Executors.newFixedThreadPool(10)
             val exchangeInfo = cacheManager.getCache("exchange-info")?.get("exchangeInfo")?.get() as List<ExchangeInfoResponseDto>
@@ -95,7 +96,6 @@ class GetTradesSchedule(
                             )
                         }
                     }
-                    Thread.sleep(5_000)
                 }
             executer.shutdown()
 
@@ -104,5 +104,6 @@ class GetTradesSchedule(
         {
             println(e.message)
         }
+        println("end get coins price------------------------- ")
     }
 }

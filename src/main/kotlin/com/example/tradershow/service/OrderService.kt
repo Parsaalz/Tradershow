@@ -10,6 +10,7 @@ import com.example.tradershow.dto.Limit.LimitOrderUserResponseDto
 import com.example.tradershow.dto.LotSize
 import com.example.tradershow.dto.Market.MarketOrderRequestDto
 import com.example.tradershow.dto.Market.MarketOrderUserResponseDto
+import com.example.tradershow.dto.Market.Side
 import com.example.tradershow.dto.Market.SubmitMarketOrderRequestDto
 import com.example.tradershow.dto.MinNotional
 import com.example.tradershow.dto.StopLoss.StopLossOrderUserRequest
@@ -174,17 +175,42 @@ class CheckStopLossOrderService(
         result.forEach { record ->
             val price = coinPriceRepo.findBySymbol(record.symbol)?.price ?: BigDecimal.ZERO
 
-            if ((record.currentPrice > price && record.stopPrice <= price) || (record.currentPrice < price && record.stopPrice >= price)) {
+            if (record.stopPrice > record.currentPrice && record.stopPrice >=price){
                 executer.submit {
-                    val requestDto = LimitOrderRequestDto(
-                        record.symbol,
-                        record.side,
-                        record.quantity,
-                        record.type,
-                        record.price,
-                    )
-                    orderService.submitLimitOrder(requestDto)
-                    stopLossRepo.updateState(record.id, StopLossState.TRIGGERED)
+                    try {
+                        val requestDto = LimitOrderRequestDto(
+                            record.symbol,
+                            Side.BUY,
+                            record.quantity,
+                            record.type,
+                            record.price,
+                        )
+                        val result = orderService.submitLimitOrder(requestDto)
+                        println(result)
+                        stopLossRepo.updateState(record.id, StopLossState.TRIGGERED)
+                    }catch (ex:Throwable){
+                        stopLossRepo.updateState(record.id, StopLossState.FAILED)
+                        throw ex
+                    }
+                }
+            }
+            else if(record.stopPrice < record.currentPrice && record.stopPrice <=price){
+                executer.submit {
+                    try {
+                        val requestDto = LimitOrderRequestDto(
+                            record.symbol,
+                            Side.SELL,
+                            record.quantity,
+                            record.type,
+                            record.price,
+                        )
+                        val result = orderService.submitLimitOrder(requestDto)
+                        println(result)
+                        stopLossRepo.updateState(record.id, StopLossState.TRIGGERED)
+                    }catch (ex:Throwable){
+                        stopLossRepo.updateState(record.id, StopLossState.FAILED)
+                        throw ex
+                    }
                 }
             }
         }

@@ -67,6 +67,7 @@ class TabdealClient {
 
         val response = client.newCall(request).execute()
         if (!response.isSuccessful) {
+            response.close()
             throw TabdealApiException("با خطایی هنگام اتصال مواجه شدیم")
         }
 
@@ -76,7 +77,7 @@ class TabdealClient {
             body,
             object : TypeReference<List<TabdealTradeResponseDto>>() {}
         )
-
+        response.close()
         return trades
     }
 
@@ -137,8 +138,8 @@ class TabdealClient {
 
 
     fun submitLimitOrder(requestDto: SubmitLimitOrderRequestDto): TabdealLimitOrderResponseDto{
-        val key = apiKey ?: throw TabdealApiException("با خطایی هنگام اتصال مواجه شدیم")
-        val secret = apiSecret ?: throw TabdealApiException("با خطایی هنگام اتصال مواجه شدیم")
+        val key = apiKey ?: throw Exception("با خطایی هنگام اتصال مواجه شدیم")
+        val secret = apiSecret ?: throw Exception("با خطایی هنگام اتصال مواجه شدیم")
 
         val params = linkedMapOf(
             "side" to requestDto.side.name,
@@ -158,6 +159,7 @@ class TabdealClient {
             .build()
         val response = client.newCall(request).execute()
         val responseBody = response.body?.string() ?: throw TabdealApiException("بامشکلی روبرو شدیم")
+        print("yes")
         println("ORDER STATUS: ${response.code}")
         println("ORDER RESPONSE: $responseBody")
         if (!response.isSuccessful) {

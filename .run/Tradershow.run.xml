@@ -1,0 +1,13 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Tradershow" type="Application" factoryName="Application">
+    <envs>
+      <env name="TABDEAL_API_KEY" value="CAlotPr33cmtpMgcGgUxpWykYpRgE79cFz5L73hiV3F5gYJ64PPGD8SoIaDGRXMX" />
+      <env name="TABDEAL_API_SECRET" value="JfamOcNSVgPXf71fWheejZNx58BOtYxM9uUnaJUInSnwCegjmgMITgYINLkOFwuV" />
+    </envs>
+    <option name="MAIN_CLASS_NAME" value="com.example.tradershow.TradershowApplicationKt" />
+    <module name="tradershow" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

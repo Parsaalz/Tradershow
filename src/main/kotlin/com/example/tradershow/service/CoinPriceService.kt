@@ -28,9 +28,10 @@ class CoinPriceService(
 
         val checkedAliesTable: String = symbolAliesService.searchAlias(normalizedSymbol)
 
-        var resultExchangeInfo = cacheManager.getCache("exchange-info")?.get("exchangeInfo")?.get() as List<ExchangeInfoResponseDto>
+        var resultExchangeInfo =
+            cacheManager.getCache("exchange-info")?.get("exchangeInfo")?.get() as List<ExchangeInfoResponseDto>
 
-        if(checkedAliesTable.isNullOrEmpty()){
+        if (checkedAliesTable.isNullOrEmpty()) {
             resultExchangeInfo = tabdealClient.getExchangeInfo()
         }
 
@@ -39,7 +40,7 @@ class CoinPriceService(
                 ?: throw MarketNotFoundException("بازاری یافت نشد")
 
 
-        val result = coinRepo.findBySymbol(usedSymbol)?:throw TabdealApiException("قیمتی برای این کوین پیدا نشد")
+        val result = coinRepo.findBySymbol(usedSymbol) ?: throw TabdealApiException("قیمتی برای این کوین پیدا نشد")
         return result
     }
 
@@ -48,17 +49,15 @@ class CoinPriceService(
 
 @Component
 class GetExchangeInfoSchedule(
-    private val tabdealClient: TabdealClient,
-    private val cacheManager: CacheManager
+    private val tabdealClient: TabdealClient, private val cacheManager: CacheManager
 ) {
     @Scheduled(fixedRate = 60_000)
     fun getExchangeInfo() {
         try {
             val result = tabdealClient.getExchangeInfo()
 
-            cacheManager.getCache("exchange-info")
-                ?.put("exchangeInfo", result)
-        }catch (e: Exception) {
+            cacheManager.getCache("exchange-info")?.put("exchangeInfo", result)
+        } catch (e: Exception) {
             println(e.message)
         }
     }
@@ -69,39 +68,40 @@ class GetTradesSchedule(
     private val tabdealClient: TabdealClient,
     private val cacheManager: CacheManager,
     private val coinRepo: CoinPricesRepository
-)
-{
+) {
     @Scheduled(fixedDelay = 1_000)
     fun getTrades() {
         println("start get coins price------------------- ")
         try {
             val executer = Executors.newFixedThreadPool(10)
-            val exchangeInfo = cacheManager.getCache("exchange-info")?.get("exchangeInfo")?.get() as List<ExchangeInfoResponseDto>
+            val exchangeInfo =
+                cacheManager.getCache("exchange-info")?.get("exchangeInfo")?.get() as List<ExchangeInfoResponseDto>
 
             val symbols = exchangeInfo?.map { it.symbol } as List<String>
 
-            symbols.chunked(15)
-                .forEach { batch ->
-                    val futures = batch.forEach { task ->
-                        executer.submit {
-                            val result = tabdealClient.getTrades(task).first().toCoinPriceResponseDto(
+            symbols.chunked(15).forEach { batch ->
+                val futures = batch.map { task ->
+                    executer.submit {
+                        val result = tabdealClient.getTrades(task).first().toCoinPriceResponseDto(
                                 base = task,
                                 quote = "USDT",
                                 symbol = task,
                             )
-                            coinRepo.save(
-                                task,
-                                price = result.price.toBigDecimal(),
-                                time = result.time,
-                            )
-                        }
+                        coinRepo.save(
+                            task,
+                            price = result.price.toBigDecimal(),
+                            time = result.time,
+                        )
                     }
                 }
-            executer.shutdown()
+
+                futures.forEach { it.get() }
+
+                Thread.sleep(5_000)
+            }
 
 
-        }catch (e: Exception)
-        {
+        } catch (e: Exception) {
             println(e.message)
         }
         println("end get coins price------------------------- ")

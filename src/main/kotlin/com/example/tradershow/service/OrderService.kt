@@ -12,6 +12,7 @@ import com.example.tradershow.dto.Market.MarketOrderRequestDto
 import com.example.tradershow.dto.Market.MarketOrderUserResponseDto
 import com.example.tradershow.dto.Market.Side
 import com.example.tradershow.dto.Market.SubmitMarketOrderRequestDto
+import com.example.tradershow.dto.Market.Type
 import com.example.tradershow.dto.MinNotional
 import com.example.tradershow.dto.StopLoss.StopLossOrderUserRequest
 import com.example.tradershow.dto.StopLoss.StopLossUserResponseDto
@@ -182,7 +183,7 @@ class CheckStopLossOrderService(
                             record.symbol,
                             Side.BUY,
                             record.quantity,
-                            record.type,
+                            Type.LIMIT,
                             record.price,
                         )
                         val result = orderService.submitLimitOrder(requestDto)
@@ -201,13 +202,14 @@ class CheckStopLossOrderService(
                             record.symbol,
                             Side.SELL,
                             record.quantity,
-                            record.type,
+                            Type.LIMIT,
                             record.price,
                         )
                         val result = orderService.submitLimitOrder(requestDto)
                         println(result)
                         stopLossRepo.updateState(record.id, StopLossState.TRIGGERED)
                     }catch (ex:Throwable){
+                        println(ex)
                         stopLossRepo.updateState(record.id, StopLossState.FAILED)
                         throw ex
                     }

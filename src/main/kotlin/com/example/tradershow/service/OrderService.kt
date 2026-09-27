@@ -39,6 +39,8 @@ class OrderService(
     private val coinPricesRepository: CoinPricesRepository,
 ) {
     fun submitMarketOrder(requestDto: MarketOrderRequestDto): MarketOrderUserResponseDto {
+        val currentTimeStamp = System.currentTimeMillis()
+
         requestDto.validate()
 
         val normalizedSymbol = normalizerService.normalize(requestDto.symbol)
@@ -76,12 +78,19 @@ class OrderService(
             userResponse.type,
             userResponse.quantity.toBigDecimal(),
             userResponse.orderId,
-            userResponse.status
+            userResponse.status,
+            currentTimeStamp
         )
         return userResponse
     }
 
     fun submitLimitOrder(requestDto: LimitOrderRequestDto): LimitOrderUserResponseDto {
+        val currentTimeStamp = System.currentTimeMillis()
+        var stop_loss_limit: Boolean=false
+        if (requestDto.type == Type.STOP_LOSS_LIMIT)
+        {
+            stop_loss_limit=true
+        }
         val normalizedSymbol = normalizerService.normalize(requestDto.symbol)
         val alizedSymbol = symbolAliasService.searchAlias(normalizedSymbol)
         val markets = tabdealClient.getExchangeInfo()
@@ -96,19 +105,40 @@ class OrderService(
         }
         val newRequestDto = requestDto.toSubmitLimitOrderRequestDto(timestamp = System.currentTimeMillis(), existSymbol)
         val result = tabdealClient.submitLimitOrder(newRequestDto)
-        orderRepository.save(
-            result.symbol,
-            result.side,
-            result.type,
-            result.cummulativeQuoteQty.toBigDecimal(),
-            result.orderId,
-            result.status
-        )
+        if(stop_loss_limit)
+        {
+            println("first")
+            orderRepository.save(
+                result.symbol,
+                result.side,
+                Type.STOP_LOSS_LIMIT.toString(),
+                result.cummulativeQuoteQty.toBigDecimal(),
+                result.orderId,
+                result.status,
+                currentTimeStamp
+
+            )
+        }
+        else
+        {
+            println("first")
+            orderRepository.save(
+                result.symbol,
+                result.side,
+                result.type,
+                result.cummulativeQuoteQty.toBigDecimal(),
+                result.orderId,
+                result.status,
+                currentTimeStamp
+            )
+        }
+
         return result.toLimitOrderUserResponseDto()
     }
 
 
     fun submitConditionalOrder(requestDto: ConditionalOrderRequestDto): ConditionalOrderUserResponseDto {
+        val currentTimeStamp = System.currentTimeMillis()
         val normalizedSymbol = normalizerService.normalize(requestDto.symbol)
         val alizedSymbol = symbolAliasService.searchAlias(normalizedSymbol)
         val markets = tabdealClient.getExchangeInfo()
@@ -134,6 +164,7 @@ class OrderService(
             result.cummulativeQuoteQty.toBigDecimal(),
             result.orderId,
             result.status,
+            currentTimeStamp
         )
         return result
 
@@ -183,12 +214,16 @@ class CheckStopLossOrderService(
                             record.symbol,
                             Side.BUY,
                             record.quantity,
-                            Type.LIMIT,
+                            Type.STOP_LOSS_LIMIT,
                             record.price,
                         )
-                        val result = orderService.submitLimitOrder(requestDto)
-                        println(result)
+                        try {
+                            val result = orderService.submitLimitOrder(requestDto)
+                        }catch (e:Exception){
+                            stopLossRepo.updateState(record.id, StopLossState.FAILED)
+                        }
                         stopLossRepo.updateState(record.id, StopLossState.TRIGGERED)
+
                     }catch (ex:Throwable){
                         stopLossRepo.updateState(record.id, StopLossState.FAILED)
                         throw ex
@@ -202,7 +237,7 @@ class CheckStopLossOrderService(
                             record.symbol,
                             Side.SELL,
                             record.quantity,
-                            Type.LIMIT,
+                            Type.STOP_LOSS_LIMIT,
                             record.price,
                         )
                         val result = orderService.submitLimitOrder(requestDto)
@@ -214,6 +249,10 @@ class CheckStopLossOrderService(
                         throw ex
                     }
                 }
+            }
+            else if (record.result == StopLossState.TRIGGERED)
+            {
+
             }
         }
         println("finished check orders")

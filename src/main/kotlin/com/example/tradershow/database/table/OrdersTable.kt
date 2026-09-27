@@ -11,4 +11,5 @@ object OrdersTable : Table("orders") {
     val quantity = decimal("quantity", 30, 15)
     val tabdealOrderId = long("tabdealOrderId")
     val status = varchar("status", 100)
+    val timestamp = long("timestamp")
 }

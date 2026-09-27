@@ -61,6 +61,7 @@ class StopLossRepository {
                     it[StopLossLimitOrdersTable.side],
                     it[StopLossLimitOrdersTable.type],
                     it[StopLossLimitOrdersTable.currentPrice],
+                    it[StopLossLimitOrdersTable.result]
                 )
             }.toList()
         }

@@ -40,7 +40,7 @@ class CoinPriceService(
                 ?: throw MarketNotFoundException("بازاری یافت نشد")
 
 
-        val result = coinRepo.findBySymbol(usedSymbol) ?: throw TabdealApiException("قیمتی برای این کوین پیدا نشد")
+        val result = coinRepo.findBySymbol(usedSymbol) ?: throw TabdealApiException("قیمتی برای این ارز پیدا نشد")
         return result
     }
 
@@ -71,13 +71,13 @@ class GetTradesSchedule(
 ) {
     @Scheduled(fixedDelay = 1_000)
     fun getTrades() {
-        println("start get coins price------------------- ")
+        println("----------------start get coins price----------------")
         try {
             val executer = Executors.newFixedThreadPool(10)
             val exchangeInfo =
                 cacheManager.getCache("exchange-info")?.get("exchangeInfo")?.get() as List<ExchangeInfoResponseDto>
 
-            val symbols = exchangeInfo?.map { it.symbol } as List<String>
+            val symbols = exchangeInfo.map { it.symbol } as List<String>
 
             symbols.chunked(15).forEach { batch ->
                 val futures = batch.map { task ->
@@ -104,6 +104,6 @@ class GetTradesSchedule(
         } catch (e: Exception) {
             println(e.message)
         }
-        println("end get coins price------------------------- ")
+        println("----------------end get coins price----------------")
     }
 }

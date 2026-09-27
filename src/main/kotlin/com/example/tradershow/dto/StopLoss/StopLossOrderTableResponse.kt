@@ -17,4 +17,5 @@ data class StopLossOrderTableResponse(
     val side : Side,
     val type : Type,
     val currentPrice : BigDecimal,
+    val state : StopLossState,
 )

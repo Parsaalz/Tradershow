@@ -1,6 +1,7 @@
 package com.example.tradershow.controller
 
 import com.example.tradershow.dto.Allorders.AllOrdersRequestUserResponse
+import com.example.tradershow.dto.Allorders.AllOrdersTableResponseDto
 import com.example.tradershow.service.AllOrdersService
 import com.example.tradershow.service.OrderService
 import org.springframework.core.annotation.Order
@@ -16,7 +17,7 @@ class AllOrdersController (
 ){
 
     @GetMapping()
-    fun getOrders(): List<AllOrdersRequestUserResponse> {
+    fun getOrders(): List<AllOrdersTableResponseDto> {
         return allOrdersService.getAllOrders()
     }
 }

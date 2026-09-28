@@ -51,9 +51,9 @@ class OrderService(
 
         val markets = tabdealClient.getExchangeInfo()
         val existSymbol = markets.find { query ->
-            query.quoteAsset == "IRT" && query.status == "TRADING" && (query.symbol == alizedSymbol || query.baseAsset == alizedSymbol)
-        }?.symbol ?: markets.find { query ->
             query.quoteAsset == "USDT" && query.status == "TRADING" && (query.symbol == alizedSymbol || query.baseAsset == alizedSymbol)
+        }?.symbol ?: markets.find { query ->
+            query.quoteAsset == "IRT" && query.status == "TRADING" && (query.symbol == alizedSymbol || query.baseAsset == alizedSymbol)
         }?.symbol ?: throw MarketNotFoundException("بازاری پیدا نشد")
 
 
@@ -95,9 +95,9 @@ class OrderService(
         val alizedSymbol = symbolAliasService.searchAlias(normalizedSymbol)
         val markets = tabdealClient.getExchangeInfo()
         val existSymbol = markets.find { query ->
-            query.quoteAsset == "IRT" && query.status == "TRADING" && (query.symbol == alizedSymbol || query.baseAsset == alizedSymbol)
-        }?.symbol ?: markets.find { query ->
             query.quoteAsset == "USDT" && query.status == "TRADING" && (query.symbol == alizedSymbol || query.baseAsset == alizedSymbol)
+        }?.symbol ?: markets.find { query ->
+            query.quoteAsset == "IRT" && query.status == "TRADING" && (query.symbol == alizedSymbol || query.baseAsset == alizedSymbol)
         }?.symbol ?: throw MarketNotFoundException("بازاری پیدا نشد")
         if (requestDto.quantity < (markets.find { it.symbol == existSymbol }?.filters?.filterIsInstance<LotSize>()
                 ?.firstOrNull()?.minQty?.toBigDecimal() ?: BigDecimal.ZERO)) {
@@ -143,9 +143,9 @@ class OrderService(
         val alizedSymbol = symbolAliasService.searchAlias(normalizedSymbol)
         val markets = tabdealClient.getExchangeInfo()
         val existSymbol = markets.find { query ->
-            query.quoteAsset == "IRT" && query.status == "TRADING" && (query.symbol == alizedSymbol || query.baseAsset == alizedSymbol)
-        }?.symbol ?: markets.find { query ->
             query.quoteAsset == "USDT" && query.status == "TRADING" && (query.symbol == alizedSymbol || query.baseAsset == alizedSymbol)
+        }?.symbol ?: markets.find { query ->
+            query.quoteAsset == "IRT" && query.status == "TRADING" && (query.symbol == alizedSymbol || query.baseAsset == alizedSymbol)
         }?.symbol ?: throw MarketNotFoundException("بازاری پیدا نشد")
         if (requestDto.quantity.toBigDecimal() < (markets.find { it.symbol == existSymbol }?.filters?.filterIsInstance<LotSize>()
                 ?.firstOrNull()?.minQty?.toBigDecimal() ?: BigDecimal.ZERO)) {

@@ -28,16 +28,17 @@ class CoinPriceService(
 
         val checkedAliesTable: String = symbolAliesService.searchAlias(normalizedSymbol)
 
-        var resultExchangeInfo =
-            cacheManager.getCache("exchange-info")?.get("exchangeInfo")?.get() as List<ExchangeInfoResponseDto>
+        val cachedValue =
+            cacheManager.getCache("exchange-info")?.get("exchangeInfo")?.get()
 
-        if (checkedAliesTable.isNullOrEmpty()) {
-            resultExchangeInfo = tabdealClient.getExchangeInfo()
-        }
+        val resultExchangeInfo =
+            (cachedValue as? List<ExchangeInfoResponseDto>)
+                ?.takeIf { it.isNotEmpty() }
+                ?: tabdealClient.getExchangeInfo()
 
-        val usedSymbol: String =
-            resultExchangeInfo.find { query -> query.quoteAsset == "USDT" && query.status == "TRADING" && (query.symbol == checkedAliesTable || query.baseAsset == checkedAliesTable) }?.symbol
-                ?: throw MarketNotFoundException("بازاری یافت نشد")
+        val usedSymbol =
+            resultExchangeInfo.find { query -> query.status == "TRADING" && (query.symbol == checkedAliesTable || query.baseAsset == checkedAliesTable) }?.symbol
+                ?: throw MarketNotFoundException("بازاری فعالی یافت نشد")
 
 
         val result = coinRepo.findBySymbol(usedSymbol) ?: throw TabdealApiException("قیمتی برای این ارز پیدا نشد")
@@ -51,7 +52,7 @@ class CoinPriceService(
 class GetExchangeInfoSchedule(
     private val tabdealClient: TabdealClient, private val cacheManager: CacheManager
 ) {
-    @Scheduled(fixedRate = 60_000)
+    @Scheduled(fixedRate = 60 * 60 * 1000)
     fun getExchangeInfo() {
         try {
             val result = tabdealClient.getExchangeInfo()
@@ -77,18 +78,18 @@ class GetTradesSchedule(
             val exchangeInfo =
                 cacheManager.getCache("exchange-info")?.get("exchangeInfo")?.get() as List<ExchangeInfoResponseDto>
 
-            val symbols = exchangeInfo.map { it.symbol } as List<String>
+            val symbols = exchangeInfo
 
             symbols.chunked(15).forEach { batch ->
                 val futures = batch.map { task ->
                     executer.submit {
-                        val result = tabdealClient.getTrades(task).first().toCoinPriceResponseDto(
-                                base = task,
-                                quote = "USDT",
-                                symbol = task,
-                            )
+                        val result = tabdealClient.getTrades(task.symbol).first().toCoinPriceResponseDto(
+                            base = task.baseAsset,
+                            quote = task.quoteAsset,
+                            symbol = task.symbol,
+                        )
                         coinRepo.save(
-                            task,
+                            task.symbol,
                             price = result.price.toBigDecimal(),
                             time = result.time,
                         )

@@ -2,6 +2,8 @@ package com.example.tradershow.service
 
 import com.example.tradershow.client.TabdealClient
 import com.example.tradershow.database.table.StopLossState
+import com.example.tradershow.dto.CancellOrder.CancellOrderRequestDto
+import com.example.tradershow.dto.CancellOrder.TabdealCancellOrderDtoResponse
 import com.example.tradershow.dto.CoinPriceResponseDto
 import com.example.tradershow.dto.Conditional.ConditionalOrderRequestDto
 import com.example.tradershow.dto.Conditional.ConditionalOrderUserResponseDto
@@ -20,6 +22,7 @@ import com.example.tradershow.exception.MarketNotFoundException
 import com.example.tradershow.repository.CoinPricesRepository
 import com.example.tradershow.repository.OrderRepository
 import com.example.tradershow.repository.StopLossRepository
+import org.springframework.core.annotation.Order
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import org.springframework.stereotype.Service
@@ -59,7 +62,7 @@ class OrderService(
 
         if (requestDto.quantity.toBigDecimal() < (markets.find { it.symbol == existSymbol }?.filters?.filterIsInstance<LotSize>()
                 ?.firstOrNull()?.minQty?.toBigDecimal() ?: BigDecimal.ZERO)) {
-            throw MarketNotFoundException("مقدار ورودی مقدار کمتر از حد پایین نمی باشد برای خرید لطفا در خرید خود توجه کنید ")
+            throw MarketNotFoundException("مقدار ورودی مقدار کمتر از حد پایین می باشد برای خرید لطفا در خرید خود توجه کنید ")
         }
         val newRequestDto = SubmitMarketOrderRequestDto(
             symbol = existSymbol,
@@ -101,7 +104,7 @@ class OrderService(
         }?.symbol ?: throw MarketNotFoundException("بازاری پیدا نشد")
         if (requestDto.quantity < (markets.find { it.symbol == existSymbol }?.filters?.filterIsInstance<LotSize>()
                 ?.firstOrNull()?.minQty?.toBigDecimal() ?: BigDecimal.ZERO)) {
-            throw MarketNotFoundException("مقدار ورودی مقدار کمتر از حد پایین نمی باشد برای خرید لطفا در خرید خود توجه کنید ")
+            throw MarketNotFoundException("مقدار ورودی مقدار کمتر از حد پایین می باشد برای خرید لطفا در خرید خود توجه کنید ")
         }
         val newRequestDto = requestDto.toSubmitLimitOrderRequestDto(timestamp = System.currentTimeMillis(), existSymbol)
         val result = tabdealClient.submitLimitOrder(newRequestDto)
@@ -149,7 +152,7 @@ class OrderService(
         }?.symbol ?: throw MarketNotFoundException("بازاری پیدا نشد")
         if (requestDto.quantity.toBigDecimal() < (markets.find { it.symbol == existSymbol }?.filters?.filterIsInstance<LotSize>()
                 ?.firstOrNull()?.minQty?.toBigDecimal() ?: BigDecimal.ZERO)) {
-            throw MarketNotFoundException("مقدار ورودی مقدار کمتر از حد پایین نمی باشد برای خرید لطفا در خرید خود توجه کنید ")
+            throw MarketNotFoundException("مقدار ورودی مقدار کمتر از حد پایین می باشد برای خرید لطفا در خرید خود توجه کنید ")
         }
 
         val newRequestDto = requestDto.toSubmitConditionalRequestDto(
@@ -185,6 +188,23 @@ class OrderService(
             StopLossState.PENDING
             )
         return requestDto.toStopLossUserResponse(timestamp)
+
+    }
+
+    fun cancellOrder(requestDto: CancellOrderRequestDto): TabdealCancellOrderDtoResponse
+    {
+        val result = tabdealClient.cancelOrder(requestDto.symbol,requestDto.orderId.toLong())
+        if (result.status == "CANCELED")
+        {
+            val row = orderRepository.getOrderById(result.orderId.toLong())
+            orderRepository.updateOrderById(row.orderId.toLong(), status = "CANCELED")
+
+        }
+        return result
+    }
+   // TODO(implement cancell all orders)
+    fun cancellAllOpenOrders()
+    {
 
     }
 }

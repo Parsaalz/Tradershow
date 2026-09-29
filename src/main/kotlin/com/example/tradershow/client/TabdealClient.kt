@@ -1,7 +1,6 @@
 package com.example.tradershow.client
 
 import com.example.tradershow.dto.Allorders.AllOrdersTableResponseDto
-import com.example.tradershow.dto.Allorders.TabdedalAllOrdersResponseDto
 import com.example.tradershow.dto.Conditional.SubmitConditionalOrderRequestDto
 import com.example.tradershow.dto.Conditional.TabdealConditionalOrderResponseDto
 import com.example.tradershow.dto.ExchangeInfoResponseDto
@@ -11,15 +10,13 @@ import com.example.tradershow.dto.Limit.TabdealLimitOrderResponseDto
 import com.example.tradershow.dto.Market.SubmitMarketOrderRequestDto
 import com.example.tradershow.dto.Market.TabdealTradeResponseDto
 import com.example.tradershow.dto.Market.Type
+import com.example.tradershow.dto.CancellOrder.TabdealCancellOrderDtoResponse
 import com.example.tradershow.exception.TabdealApiException
 import com.example.tradershow.repository.OrderRepository
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
-import okio.ByteString.Companion.encodeUtf8
-import okio.HashingSource.Companion.hmacSha256
-import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Component
 import tools.jackson.core.type.TypeReference
 import tools.jackson.databind.ObjectMapper
@@ -281,5 +278,58 @@ class TabdealClient(
 //        )
         val result = orderRepo.getAllOrders()
         return result
+    }
+
+    fun cancelOrder(
+        symbol: String,
+        orderId: Long
+    ): TabdealCancellOrderDtoResponse {
+
+        val key = apiKey
+            ?: throw TabdealApiException("با خطایی هنگام اتصال مواجه شدیم")
+
+        val secret = apiSecret
+            ?: throw TabdealApiException("با خطایی هنگام اتصال مواجه شدیم")
+
+        val params = linkedMapOf(
+            "symbol" to symbol,
+            "orderId" to orderId.toString(),
+            "timestamp" to System.currentTimeMillis().toString(),
+        )
+
+        val queryString = toQueryString(params)
+
+        val signature = generateSignature(
+            queryString,
+            secret
+        )
+
+        val body = "$queryString&signature=$signature"
+            .toRequestBody(formUrlEncoded)
+
+        val request = Request.Builder()
+            .url("https://api1.tabdeal.org/api/v1/order")
+            .addHeader("X-MBX-APIKEY", key)
+            .delete(body)
+            .build()
+
+        client.newCall(request).execute().use { response ->
+
+            val responseBody = response.body?.string()
+                ?: throw TabdealApiException(
+                    "با مشکلی هنگام اتصال مواجه شدیم"
+                )
+
+            if (!response.isSuccessful) {
+                throw TabdealApiException(
+                    "با مشکلی هنگام لغو سفارش مواجه شدیم"
+                )
+            }
+
+            return objectMapper.readValue(
+                responseBody,
+                object : TypeReference<TabdealCancellOrderDtoResponse>() {}
+            )
+        }
     }
 }

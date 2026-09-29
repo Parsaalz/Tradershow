@@ -6,6 +6,7 @@ import java.math.BigDecimal
 
 data class AllOrdersTableResponseDto(
     val symbol: String,
+    val orderId : String,
     val side: String,
     val type: String,
     val quantity: BigDecimal,

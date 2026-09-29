@@ -1,5 +1,7 @@
 package com.example.tradershow.dto.Limit
 
+import com.example.tradershow.database.table.OrderStatus
+
 data class LimitOrderUserResponseDto(
     val orderId: Long,
     val symbol: String,

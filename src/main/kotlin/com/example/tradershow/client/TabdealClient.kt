@@ -1,5 +1,6 @@
 package com.example.tradershow.client
 
+import com.example.tradershow.database.table.OrderStatus
 import com.example.tradershow.dto.Allorders.AllOrdersTableResponseDto
 import com.example.tradershow.dto.Conditional.SubmitConditionalOrderRequestDto
 import com.example.tradershow.dto.Conditional.TabdealConditionalOrderResponseDto
@@ -11,6 +12,7 @@ import com.example.tradershow.dto.Market.SubmitMarketOrderRequestDto
 import com.example.tradershow.dto.Market.TabdealTradeResponseDto
 import com.example.tradershow.dto.Market.Type
 import com.example.tradershow.dto.CancellOrder.TabdealCancellOrderDtoResponse
+import com.example.tradershow.dto.TabdealOrderStatusResponseDto
 import com.example.tradershow.exception.TabdealApiException
 import com.example.tradershow.repository.OrderRepository
 import okhttp3.MediaType.Companion.toMediaType
@@ -183,7 +185,7 @@ class TabdealClient(
                     Type.STOP_LOSS_LIMIT.toString(),
                     quantity =requestDto.quantity,
                     -1,
-                    "Failed",
+                    OrderStatus.FAILED,
                     currentTimeStamp
                 )
             }
@@ -194,7 +196,7 @@ class TabdealClient(
                     requestDto.type.toString(),
                     quantity =requestDto.quantity,
                     -1,
-                    "Failed",
+                    OrderStatus.FAILED,
                     currentTimeStamp
                 )
             }
@@ -242,42 +244,6 @@ class TabdealClient(
             responseBody,
             object : TypeReference<TabdealConditionalOrderResponseDto>() {}
         )
-    }
-
-    fun getAllOrders(): List<AllOrdersTableResponseDto> {
-
-//        val timestamp = System.currentTimeMillis()
-//
-//        val query:String = "limit=50&timestamp=$timestamp"
-//
-//        val signature  = generateSignature(query,apiSecret)
-//
-//        val url =
-//            "https://api1.tabdeal.org/r/api/v1/allOrders?$query&signature=$signature"
-//
-//        val request = Request.Builder()
-//            .url(url)
-//            .get()
-//            .addHeader("X-MBX-APIKEY", apiKey)
-//            .build()
-//
-//        val response = client.newCall(request).execute()
-//
-//        val responseBody = response.body?.string()
-//
-//        println("ORDER STATUS: ${response.code}")
-//        println("ORDER RESPONSE: $responseBody")
-//
-//        if (!response.isSuccessful) {
-//            throw TabdealApiException("سرویس در دسترس نمیباشد")
-//        }
-//
-//        return objectMapper.readValue(
-//            responseBody,
-//            object : TypeReference<List<TabdedalAllOrdersResponseDto>>() {}
-//        )
-        val result = orderRepo.getAllOrders()
-        return result
     }
 
     fun cancelOrder(
@@ -331,5 +297,57 @@ class TabdealClient(
                 object : TypeReference<TabdealCancellOrderDtoResponse>() {}
             )
         }
+    }
+
+
+    fun getOrderStatus(
+        symbol: String,
+        orderId: Long
+    ): TabdealOrderStatusResponseDto
+    {
+        val key = apiKey
+            ?: throw TabdealApiException("با خطایی هنگام اتصال مواجه شدیم")
+
+        val secret = apiSecret
+            ?: throw TabdealApiException("با خطایی هنگام اتصال مواجه شدیم")
+
+        val params = linkedMapOf(
+            "symbol" to symbol,
+            "orderId" to orderId.toString(),
+            "timestamp" to System.currentTimeMillis().toString(),
+        )
+
+        val queryString = toQueryString(params)
+
+        val signature = generateSignature(
+            queryString,
+            secret
+        )
+
+        val url =
+            "https://api1.tabdeal.org/r/api/v1/order?$queryString&signature=$signature"
+
+
+        val request = Request.Builder()
+            .url(url)
+            .addHeader("X-MBX-APIKEY", key)
+            .get()
+            .build()
+
+        val response = client.newCall(request).execute()
+        val responseBody = response.body?.string()
+        ?: throw TabdealApiException(
+            "با مشکلی هنگام اتصال مواجه شدیم"
+        )
+        if (!response.isSuccessful) {
+            throw TabdealApiException(
+                "خطا در دریافت وضعیت سفارش"
+            )
+        }
+
+        return objectMapper.readValue(
+            responseBody,
+            object : TypeReference<TabdealOrderStatusResponseDto>() {}
+        )
     }
 }

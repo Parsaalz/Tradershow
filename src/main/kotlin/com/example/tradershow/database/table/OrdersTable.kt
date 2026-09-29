@@ -12,6 +12,16 @@ object OrdersTable : Table("orders") {
     val type = varchar("type", 30)
     val quantity = decimal("quantity", 30, 15)
     val tabdealOrderId = long("tabdealOrderId")
-    val status = varchar("status", 100)
+    val status = enumerationByName<OrderStatus>("status", 100)
     val timestamp = long("timestamp")
+}
+
+
+enum class OrderStatus {
+    SUCCESS,
+    PENDING,
+    TRIGERRED,
+    CANCELLED,
+    FAILED,
+    EXECUTING,
 }

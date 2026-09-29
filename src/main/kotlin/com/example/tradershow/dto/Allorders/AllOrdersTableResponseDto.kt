@@ -1,5 +1,6 @@
 package com.example.tradershow.dto.Allorders
 
+import com.example.tradershow.database.table.OrderStatus
 import com.example.tradershow.dto.Market.Side
 import com.example.tradershow.dto.Market.Type
 import java.math.BigDecimal

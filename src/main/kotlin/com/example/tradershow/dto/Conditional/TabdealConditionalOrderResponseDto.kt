@@ -1,5 +1,7 @@
 package com.example.tradershow.dto.Conditional
 
+import com.example.tradershow.database.table.OrderStatus
+
 data class TabdealConditionalOrderResponseDto(
     val symbol: String,
     val orderId: Long,

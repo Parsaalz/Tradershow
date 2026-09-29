@@ -13,10 +13,7 @@ class AllOrdersService(
     private val orderRepo: OrderRepository,
 ) {
     fun getAllOrders():List<AllOrdersTableResponseDto>{
-        val result=tabdealClient.getAllOrders()
-//        return result.map {
-//            order -> order.toAllOrderRequestUserResponseDto()
-//        }
+        val result = orderRepo.getAllOrders()
         return result
     }
 

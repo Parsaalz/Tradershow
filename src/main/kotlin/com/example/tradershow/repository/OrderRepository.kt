@@ -1,5 +1,6 @@
 package com.example.tradershow.repository
 
+import com.example.tradershow.database.table.OrderStatus
 import com.example.tradershow.database.table.OrdersTable
 import com.example.tradershow.database.table.StopLossLimitOrdersTable.result
 import com.example.tradershow.dto.Allorders.AllOrdersTableResponseDto
@@ -28,7 +29,7 @@ class OrderRepository(
         type: String,
         quantity: BigDecimal,
         tabdealOrderId: Long,
-        status: String,
+        status: OrderStatus,
         timestamp: Long
     ){
         transaction {
@@ -58,7 +59,7 @@ class OrderRepository(
                         order[OrdersTable.type],
                         order[OrdersTable.quantity],
                         order[OrdersTable.tabdealOrderId],
-                        order[OrdersTable.status],
+                        order[OrdersTable.status].toString(),
                         Instant.ofEpochMilli(order[OrdersTable.timestamp])
                             .atZone(ZoneId.of("Asia/Tehran"))
                             .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
@@ -79,7 +80,7 @@ class OrderRepository(
                 result[OrdersTable.type],
                 result[OrdersTable.quantity],
                 result[OrdersTable.tabdealOrderId],
-                result[OrdersTable.status],
+                result[OrdersTable.status].toString(),
                 result[OrdersTable.timestamp].toTehranTime()
             )
         }
@@ -91,7 +92,7 @@ class OrderRepository(
         side: String?=null,
         type: String?=null,
         quantity: BigDecimal?=null,
-        status: String?=null,
+        status: OrderStatus?=null,
         timestamp: Long?=null,
     ) {
         transaction {

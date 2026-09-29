@@ -1,5 +1,6 @@
 package com.example.tradershow.dto.Limit
 
+import com.example.tradershow.database.table.OrderStatus
 import com.example.tradershow.dto.FillDto
 
 data class TabdealLimitOrderResponseDto(

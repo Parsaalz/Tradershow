@@ -1,5 +1,7 @@
 package com.example.tradershow.dto.Market
 
+import com.example.tradershow.database.table.OrderStatus
+
 data class MarketOrderUserResponseDto(
     val orderId: Long,
     val symbol: String,

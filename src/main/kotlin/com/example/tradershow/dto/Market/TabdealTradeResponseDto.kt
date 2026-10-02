@@ -1,14 +1,14 @@
 package com.example.tradershow.dto.Market
 
 import com.example.tradershow.dto.CoinPriceResponseDto
+import com.example.tradershow.dto.Limit.TabdealLimitOrderResponseDto
 
 data class TabdealTradeResponseDto(
-    val price: String,
-    val time: Long,
+    val bids: List<List<String>>,
 ) {
-    fun toCoinPriceResponseDto(base: String, quote: String, symbol: String): CoinPriceResponseDto {
+    fun toCoinPriceResponseDto(base: String, quote: String, symbol: String,time:Long): CoinPriceResponseDto {
         return CoinPriceResponseDto(
-            price = price,
+            price = bids.first().first(),
             time = time,
             base = base,
             quote = quote,

@@ -7,6 +7,7 @@ import org.jetbrains.exposed.sql.Table
 object StopLossLimitOrdersTable: Table("StopLossLimitOrders") {
     val id = long("id").autoIncrement()
     override val primaryKey = PrimaryKey(id)
+    val order_id = long("order_id").nullable()
     val symbol = varchar("symbol", 100)
     val timestamp = long("timestamp")
     val side = enumerationByName<Side>("side",50)

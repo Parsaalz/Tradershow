@@ -7,6 +7,7 @@ import java.math.BigDecimal
 
 data class StopLossOrderTableResponse(
     val id: Long,
+    val orderId: Long?,
     val symbol: String,
     val stopLossPrice: BigDecimal,
     val price: BigDecimal,

@@ -51,6 +51,7 @@ class StopLossRepository {
             StopLossLimitOrdersTable.selectAll().where(StopLossLimitOrdersTable.result.eq(state)).map {
                 StopLossOrderTableResponse(
                     it[StopLossLimitOrdersTable.id],
+                    it[StopLossLimitOrdersTable.order_id],
                     it[StopLossLimitOrdersTable.symbol],
                     it[StopLossLimitOrdersTable.stopPrice],
                     it[StopLossLimitOrdersTable.stopPrice],
@@ -77,6 +78,22 @@ class StopLossRepository {
                     it[StopLossLimitOrdersTable.result] = state
                 }
             )
+        }
+    }
+
+
+    fun updateOrderId(id: Long,orderId:Long)
+    {
+        println("UPDATE ORDER ID: stopLossId=$id orderId=$orderId")
+
+        transaction {
+            val updatedOrders = StopLossLimitOrdersTable.update(
+                where = { StopLossLimitOrdersTable.id eq id },
+                body = {
+                    it[StopLossLimitOrdersTable.order_id] = orderId
+                }
+            )
+            println("UPDATED ROWS: $updatedOrders")
         }
     }
 

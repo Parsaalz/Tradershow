@@ -1,5 +1,6 @@
 package com.example.tradershow.config
 
+import com.example.tradershow.database.table.AlertTable
 import com.example.tradershow.database.table.CoinPrices
 import com.example.tradershow.database.table.OrdersTable
 import com.example.tradershow.database.table.StopLossLimitOrdersTable
@@ -26,6 +27,7 @@ class DatabaseConfig {
             SchemaUtils.create(OrdersTable)
             SchemaUtils.create(CoinPrices)
             SchemaUtils.create(StopLossLimitOrdersTable)
+            SchemaUtils.create(AlertTable)
         }
     }
 }

@@ -7,15 +7,16 @@ import com.example.tradershow.dto.ExchangeInfoResponseDto
 import com.example.tradershow.exception.MarketNotFoundException
 import com.example.tradershow.exception.TabdealApiException
 import com.example.tradershow.repository.CoinPricesRepository
+import org.jetbrains.exposed.sql.transactions.transaction
 import org.springframework.cache.CacheManager
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import org.springframework.stereotype.Service
+import java.lang.System
 import java.util.concurrent.Executors
 
 @Service
-@Cacheable("price_info")
 class CoinPriceService(
     private val symbolNormalizer: SymbolNormalizerService,
     private val tabdealClient: TabdealClient,
@@ -83,16 +84,19 @@ class GetTradesSchedule(
             symbols.chunked(15).forEach { batch ->
                 val futures = batch.map { task ->
                     executer.submit {
-                        val result = tabdealClient.getTrades(task.symbol).first().toCoinPriceResponseDto(
+                        val result = tabdealClient.getTrades(task.symbol).toCoinPriceResponseDto(
                             base = task.baseAsset,
                             quote = task.quoteAsset,
                             symbol = task.symbol,
+                            time = System.currentTimeMillis()
                         )
-                        coinRepo.save(
-                            task.symbol,
-                            price = result.price.toBigDecimal(),
-                            time = result.time,
-                        )
+                        transaction {
+                            coinRepo.save(
+                                task.symbol,
+                                price = result.price.toBigDecimal(),
+                                time = result.time,
+                            )
+                        }
                     }
                 }
 
@@ -106,5 +110,56 @@ class GetTradesSchedule(
             println(e.message)
         }
         println("----------------end get coins price----------------")
+    }
+}
+
+
+@Component
+class GetSomeCoinsPricesSchedule(
+    private val tabdealClient: TabdealClient,
+    private val cacheManager: CacheManager,
+    private val coinRepo: CoinPricesRepository
+) {
+    @Scheduled(fixedDelay = 1_000)
+    fun getImportantCoinsPrices() {
+        println("----------------start get important coins price----------------")
+        try {
+            val executer = Executors.newFixedThreadPool(10)
+            var symbols =
+                cacheManager
+                    .getCache("exchange-info")
+                    ?.get("exchangeInfo")
+                    ?.get() as? List<ExchangeInfoResponseDto>
+            symbols = symbols?.filter { it.symbol == "OXTUSDT"|| it.symbol == "BTCUSDT" }
+
+            symbols?.chunked(15)?.forEach { batch ->
+                val futures = batch.map { task ->
+                    executer.submit {
+                        val result = tabdealClient.getTrades(task.symbol).toCoinPriceResponseDto(
+                            base = task.baseAsset,
+                            quote = task.quoteAsset,
+                            symbol = task.symbol,
+                            time = System.currentTimeMillis()
+                        )
+                        transaction {
+                            coinRepo.save(
+                                task.symbol,
+                                price = result.price.toBigDecimal(),
+                                time = result.time,
+                            )
+                        }
+                    }
+                }
+
+                futures.forEach { it.get() }
+
+                Thread.sleep(2_000)
+            }
+
+
+        } catch (e: Exception) {
+            println(e.message)
+        }
+        println("----------------end get important coins price----------------")
     }
 }

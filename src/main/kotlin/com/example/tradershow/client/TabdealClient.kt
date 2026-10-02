@@ -60,11 +60,10 @@ class TabdealClient(
             "${urlEncode(key)}=${urlEncode(value)}"
         }
 
-    fun getTrades(symbol: String): List<TabdealTradeResponseDto> {
-
+    fun getTrades(symbol: String): TabdealTradeResponseDto {
         val request = Request.Builder()
             .url(
-                "https://api1.tabdeal.org/r/api/v1/trades?symbol=$symbol&limit=1"
+                "https://api1.tabdeal.org/r/api/v1/depth?symbol=$symbol&limit=1"
             )
             .get()
             .build()
@@ -79,7 +78,7 @@ class TabdealClient(
         if (body.isEmpty()) throw TabdealApiException("با خطایی هنگام اتصال مواجه شدیم")
         val trades = objectMapper.readValue(
             body,
-            object : TypeReference<List<TabdealTradeResponseDto>>() {}
+            object : TypeReference<TabdealTradeResponseDto>() {}
         )
         response.close()
         return trades
@@ -340,6 +339,8 @@ class TabdealClient(
             "با مشکلی هنگام اتصال مواجه شدیم"
         )
         if (!response.isSuccessful) {
+            println("STATUS CODE: ${response.code}")
+            println("RESPONSE BODY: $responseBody")
             throw TabdealApiException(
                 "خطا در دریافت وضعیت سفارش"
             )

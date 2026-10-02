@@ -3,6 +3,7 @@
     <envs>
       <env name="TABDEAL_API_KEY" value="CAlotPr33cmtpMgcGgUxpWykYpRgE79cFz5L73hiV3F5gYJ64PPGD8SoIaDGRXMX" />
       <env name="TABDEAL_API_SECRET" value="JfamOcNSVgPXf71fWheejZNx58BOtYxM9uUnaJUInSnwCegjmgMITgYINLkOFwuV" />
+      <env name="SMS_API_KEY" value="ZTMliBOQN8zpsHbsxHSZRaGf5hSvkR2D7pxeSaaUZmhMLMEK" />
     </envs>
     <option name="MAIN_CLASS_NAME" value="com.example.tradershow.TradershowApplicationKt" />
     <module name="tradershow" />

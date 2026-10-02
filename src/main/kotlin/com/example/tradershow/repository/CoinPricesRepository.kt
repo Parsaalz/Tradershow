@@ -48,6 +48,7 @@ class CoinPricesRepository {
                     it[CoinPrices.lastUpdatedTime].toTehranTime()
                 )
             }.single()
+
         }
     }
 }

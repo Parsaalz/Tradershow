@@ -6,15 +6,20 @@ import com.example.tradershow.dto.CoinPriceUserResponseDto
 import com.example.tradershow.dto.ExchangeInfoResponseDto
 import com.example.tradershow.exception.MarketNotFoundException
 import com.example.tradershow.exception.TabdealApiException
+import com.example.tradershow.repository.AlertSystemRepository
 import com.example.tradershow.repository.CoinPricesRepository
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.cache.CacheManager
 import org.springframework.cache.annotation.Cacheable
+import org.springframework.context.event.EventListener
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import org.springframework.stereotype.Service
 import java.lang.System
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicInteger
 
 @Service
 class CoinPriceService(
@@ -65,15 +70,17 @@ class GetExchangeInfoSchedule(
     }
 }
 
+//1678203
 @Component
 class GetTradesSchedule(
     private val tabdealClient: TabdealClient,
     private val cacheManager: CacheManager,
-    private val coinRepo: CoinPricesRepository
+    private val coinRepo: CoinPricesRepository,
+    private val logger: Logger,
 ) {
     @Scheduled(fixedDelay = 1_000)
     fun getTrades() {
-        println("----------------start get coins price----------------")
+        logger.info("start get coins price", GetTradesSchedule::class.java)
         try {
             val executer = Executors.newFixedThreadPool(10)
             val exchangeInfo =
@@ -109,7 +116,7 @@ class GetTradesSchedule(
         } catch (e: Exception) {
             println(e.message)
         }
-        println("----------------end get coins price----------------")
+        logger.info("end get coins price", GetTradesSchedule::class.java)
     }
 }
 
@@ -118,11 +125,12 @@ class GetTradesSchedule(
 class GetSomeCoinsPricesSchedule(
     private val tabdealClient: TabdealClient,
     private val cacheManager: CacheManager,
-    private val coinRepo: CoinPricesRepository
+    private val coinRepo: CoinPricesRepository,
+    private val logger: Logger,
 ) {
     @Scheduled(fixedDelay = 1_000)
     fun getImportantCoinsPrices() {
-        println("----------------start get important coins price----------------")
+        logger.info("start get important coins price", GetSomeCoinsPricesSchedule::class.java)
         try {
             val executer = Executors.newFixedThreadPool(10)
             var symbols =
@@ -130,7 +138,7 @@ class GetSomeCoinsPricesSchedule(
                     .getCache("exchange-info")
                     ?.get("exchangeInfo")
                     ?.get() as? List<ExchangeInfoResponseDto>
-            symbols = symbols?.filter { it.symbol == "OXTUSDT"|| it.symbol == "BTCUSDT" }
+            symbols = symbols?.filter { it.symbol == "OXTUSDT" || it.symbol == "BTCUSDT" }
 
             symbols?.chunked(15)?.forEach { batch ->
                 val futures = batch.map { task ->
@@ -160,6 +168,25 @@ class GetSomeCoinsPricesSchedule(
         } catch (e: Exception) {
             println(e.message)
         }
-        println("----------------end get important coins price----------------")
+        logger.info("end get important coins price", GetSomeCoinsPricesSchedule::class.java)
     }
+}
+
+
+@Component
+class PriorityCoinServiceHandler(
+    private val alertSystemRepository: AlertSystemRepository,
+    private val logger: Logger,
+) {
+    val priorityCoins = ConcurrentHashMap<String, AtomicInteger>()
+    @EventListener(ApplicationReadyEvent::class)
+    fun fillPriorityCoins() {
+        val result = alertSystemRepository.getByActive()
+        result.forEach { alertSystem ->
+            priorityCoins.computeIfAbsent(alertSystem.symbol) { AtomicInteger(0) }.incrementAndGet()
+        }
+        logger.warn("-----------------$priorityCoins-----------------", PriorityCoinServiceHandler::class.java)
+
+    }
+
 }

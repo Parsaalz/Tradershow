@@ -243,10 +243,11 @@ class CheckOrderService(
     private val coinPriceRepo: CoinPricesRepository,
     private val orderRepo: OrderRepository,
     private val tabdealClient: TabdealClient,
+    private val logger: Logger,
 ) {
     @Scheduled(fixedRate = 10_000)
     fun checkOrders() {
-        println("start check orders")
+        logger.info("start check orders", CheckOrderService::class.java)
 
         val executer = Executors.newScheduledThreadPool(10)
 
@@ -277,7 +278,7 @@ class CheckOrderService(
                 }
             }
         }
-        println("finished check orders")
+        logger.info("finished check orders",CheckOrderService::class.java)
         executer.shutdown()
     }
 }
@@ -288,10 +289,11 @@ class SubmitStopLossLimitOrderService(
     private val orderRepo: OrderRepository,
     private val coinPriceRepo: CoinPricesRepository,
     private val orderService: OrderService,
+    private val logger: Logger,
 ) {
     @Scheduled(fixedDelay = 10_000)
     fun submitOrder() {
-        println("start check orders")
+        logger.info("start check orders", SubmitStopLossLimitOrderService::class.java)
         val result = stopLossRepo.findByState(StopLossState.PENDING)
         val executer = Executors.newScheduledThreadPool(10)
         result.forEach { record ->
@@ -347,7 +349,7 @@ class SubmitStopLossLimitOrderService(
                 }
             }
         }
-        println("finished check orders")
+        logger.info("finished check orders",SubmitStopLossLimitOrderService::class.java)
         executer.shutdown()
     }
 }
@@ -357,10 +359,11 @@ class SubmitStopLossLimitOrderService(
 class CheckSpotLossTrigeredOrderService(
     private val orderRepo: OrderRepository,
     private val stopLossRepo: StopLossRepository,
+    private val logger: Logger,
 ) {
     @Scheduled(fixedDelay = 10_000)
     fun checkTriggeredOrder() {
-        println("start check orders Trigerred")
+        logger.info("start check orders Trigerred", CheckSpotLossTrigeredOrderService::class.java)
         val result = stopLossRepo.findByState(StopLossState.TRIGGERED)
         val executor = Executors.newScheduledThreadPool(10)
         result.forEach { record ->
@@ -408,7 +411,7 @@ class CheckSpotLossTrigeredOrderService(
                     }
                 }
             }
-            println("end check orders Trigerred")
+            logger.info("end check orders Trigerred",CheckSpotLossTrigeredOrderService::class.java)
         }
     }
 }

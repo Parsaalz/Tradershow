@@ -12,10 +12,12 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import org.springframework.stereotype.Service
 import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicInteger
 
 @Service
 class AlertSystemService(
     private val alertRepo: AlertSystemRepository,
+    private val priorityCoinHandler:PriorityCoinServiceHandler
 ) {
     fun createAlert(requestDto: CreateAlertRequestDto): CreateAlertResponseDto
     {
@@ -25,6 +27,7 @@ class AlertSystemService(
             requestDto.direction,
             requestDto.phoneNumber
         )
+        priorityCoinHandler.priorityCoins.computeIfAbsent(requestDto.symbol){ AtomicInteger(0) }.incrementAndGet()
         return CreateAlertResponseDto(
             requestDto.symbol,
             requestDto.targetPrice,
@@ -41,24 +44,29 @@ class AlertService(
     private val coinPriceService: CoinPriceService,
     private val smsDotIrClient: SmsDotIrClient,
     private val logger: Logger,
+    private val priorityCoinHandler:PriorityCoinServiceHandler,
 )
 {
     @Scheduled(fixedDelay = 10_000)
     fun checkAlertsAndSendSms()
     {
-        logger.log("--------------- Alerts Checking Scheduler started! ------------------", AlertService::class.java)
+        println(priorityCoinHandler.priorityCoins)
+        logger.info("Alerts Checking Scheduler started!", AlertService::class.java)
         val result = alertRepo.getByActive()
-        logger.log(result.toString(), AlertService::class.java)
+        logger.info(result.toString(), AlertService::class.java)
         result.forEach { alert ->
             val coinPrice = coinPriceService.getCoinPrice(alert.symbol)
 
             if (alert.direction == DirectionType.ABOVE && coinPrice.price > alert.targetPrice) {
                 sendSmsAndFinalizeAlert(alert)
+                priorityCoinHandler.priorityCoins[alert.symbol]?.decrementAndGet()?:0
+
             } else if (alert.direction == DirectionType.BELLOW && coinPrice.price < alert.targetPrice) {
                 sendSmsAndFinalizeAlert(alert)
+                priorityCoinHandler.priorityCoins[alert.symbol]?.decrementAndGet()?:0
             }
         }
-        logger.log("--------------- Alerts Checking Scheduler finished! ------------------", AlertService::class.java)
+        logger.info("Alerts Checking Scheduler finished!", AlertService::class.java)
     }
 
     fun sendSmsAndFinalizeAlert(alert: AlertTableResponseDto) {

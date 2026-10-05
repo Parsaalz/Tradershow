@@ -59,11 +59,15 @@ class AlertService(
 
             if (alert.direction == DirectionType.ABOVE && coinPrice.price > alert.targetPrice) {
                 sendSmsAndFinalizeAlert(alert)
-                priorityCoinHandler.priorityCoins[alert.symbol]?.decrementAndGet()?:0
+                priorityCoinHandler.priorityCoins.computeIfPresent(alert.symbol) { _, count ->
+                    if (count.decrementAndGet() <= 0) null else count
+                }
 
             } else if (alert.direction == DirectionType.BELLOW && coinPrice.price < alert.targetPrice) {
                 sendSmsAndFinalizeAlert(alert)
-                priorityCoinHandler.priorityCoins[alert.symbol]?.decrementAndGet()?:0
+                priorityCoinHandler.priorityCoins.computeIfPresent(alert.symbol) { _, count ->
+                    if (count.decrementAndGet() <= 0) null else count
+                }
             }
         }
         logger.info("Alerts Checking Scheduler finished!", AlertService::class.java)

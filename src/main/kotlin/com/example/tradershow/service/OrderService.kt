@@ -27,6 +27,7 @@ import org.springframework.stereotype.Component
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
 import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.text.toBigDecimal
 import kotlin.toBigDecimal
 
@@ -38,6 +39,7 @@ class OrderService(
     private val orderRepository: OrderRepository,
     private val stopLossRepository: StopLossRepository,
     private val coinPricesRepository: CoinPricesRepository,
+    private val priorityCoinService: PriorityCoinServiceHandler
 ) {
     fun submitMarketOrder(requestDto: MarketOrderRequestDto): MarketOrderUserResponseDto {
         val currentTimeStamp = System.currentTimeMillis()
@@ -207,6 +209,8 @@ class OrderService(
             coinPricesRepository.findBySymbol(requestDto.symbol)?.price ?: BigDecimal.ZERO,
             StopLossState.PENDING
         )
+        priorityCoinService.priorityCoins.computeIfAbsent(requestDto.symbol) { AtomicInteger(0) }.incrementAndGet()
+
         return requestDto.toStopLossUserResponse(timestamp)
 
     }
@@ -290,6 +294,7 @@ class SubmitStopLossLimitOrderService(
     private val coinPriceRepo: CoinPricesRepository,
     private val orderService: OrderService,
     private val logger: Logger,
+    private val priorityCoinService: PriorityCoinServiceHandler
 ) {
     @Scheduled(fixedDelay = 10_000)
     fun submitOrder() {
@@ -314,6 +319,9 @@ class SubmitStopLossLimitOrderService(
                             println(requestResult)
                             stopLossRepo.updateOrderId(record.id, requestResult.orderId)
                             stopLossRepo.updateState(record.id, StopLossState.TRIGGERED)
+                            priorityCoinService.priorityCoins.computeIfPresent(record.symbol) { _, count ->
+                                if (count.decrementAndGet() <= 0) null else count
+                            }
 
                         } catch (e: Exception) {
                             stopLossRepo.updateState(record.id, StopLossState.FAILED)
@@ -339,6 +347,9 @@ class SubmitStopLossLimitOrderService(
                             println(requestResult)
                             stopLossRepo.updateOrderId(record.id, requestResult.orderId)
                             stopLossRepo.updateState(record.id, StopLossState.TRIGGERED)
+                            priorityCoinService.priorityCoins.computeIfPresent(record.symbol) { _, count ->
+                                if (count.decrementAndGet() <= 0) null else count
+                            }
                         }catch (ex: Throwable) {
                             stopLossRepo.updateState(record.id, StopLossState.FAILED)
                         }
@@ -356,14 +367,14 @@ class SubmitStopLossLimitOrderService(
 
 
 @Component
-class CheckSpotLossTrigeredOrderService(
+class CheckSpotLossTriggeredOrderService(
     private val orderRepo: OrderRepository,
     private val stopLossRepo: StopLossRepository,
     private val logger: Logger,
 ) {
     @Scheduled(fixedDelay = 10_000)
     fun checkTriggeredOrder() {
-        logger.info("start check orders Trigerred", CheckSpotLossTrigeredOrderService::class.java)
+        logger.info("start check orders Trigerred", CheckSpotLossTriggeredOrderService::class.java)
         val result = stopLossRepo.findByState(StopLossState.TRIGGERED)
         val executor = Executors.newScheduledThreadPool(10)
         result.forEach { record ->
@@ -411,7 +422,7 @@ class CheckSpotLossTrigeredOrderService(
                     }
                 }
             }
-            logger.info("end check orders Trigerred",CheckSpotLossTrigeredOrderService::class.java)
+            logger.info("end check orders Trigerred",CheckSpotLossTriggeredOrderService::class.java)
         }
     }
 }
